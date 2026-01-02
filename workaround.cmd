@@ -1,0 +1,1 @@
+@XCOPY /Y artifacts\obj\ShellExtensions2\*.* artifacts\obj\ShellExtensions2\wappublish\win-x64\
