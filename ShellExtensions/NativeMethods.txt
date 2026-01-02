@@ -1,2 +1,10 @@
 IInitializeWithStream
+IPropertyStore
+IPropertyStoreCapabilities
 IThumbnailProvider
+
+S_FALSE
+
+PKEY_Author
+PKEY_Title
+PKEY_Media_Publisher
