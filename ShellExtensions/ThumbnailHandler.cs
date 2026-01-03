@@ -40,7 +40,7 @@ public class ThumbnailHandler : IThumbnailProvider, IInitializeWithStream, IDisp
             graphics.DrawImage(cover, 0, 0, width, height);
         }
 
-        *phbmp = new HBITMAP(thumbnail.GetHbitmap());
+        *phbmp = (HBITMAP)thumbnail.GetHbitmap();
         *pdwAlpha = WTS_ALPHATYPE.WTSAT_ARGB;
     }
 

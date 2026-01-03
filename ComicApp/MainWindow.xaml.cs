@@ -4,12 +4,14 @@ using System.Linq;
 using System.Threading.Tasks;
 using ComicLib;
 using CommunityToolkit.Mvvm.ComponentModel;
+using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Media.Imaging;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.Foundation;
+using Windows.Graphics;
 using Windows.Graphics.Imaging;
 using Windows.Storage;
 using Windows.System;
@@ -19,12 +21,12 @@ namespace ComicApp;
 [INotifyPropertyChanged]
 public sealed partial class MainWindow : Window
 {
-    ComicBookArchive? _comicBook;
-
     double _dragHorizontalOffset;
     double _dragVerticalOffset;
     Point _dragStartPosition;
 
+    [ObservableProperty]
+    ComicBookArchive? _comicBook;
 
     [ObservableProperty]
     int _currentPage;
@@ -41,18 +43,43 @@ public sealed partial class MainWindow : Window
 
         //_ = App.Current.GetRequiredService<>();
 
-        // TODO: Resize to 6.625 x 10.25
         InitializeComponent();
+
+        ExtendsContentIntoTitleBar = true;
+        SetTitleBar(_titleBar);
+
+        // TODO: Remember previous size and position
+        var positionAndSize = GetDefaultPositionAndSize();
+        AppWindow.MoveAndResize(positionAndSize);
+    }
+
+    RectInt32 GetDefaultPositionAndSize()
+    {
+        var displayArea = DisplayArea.GetFromWindowId(AppWindow.Id, DisplayAreaFallback.Nearest);
+        var height = displayArea.WorkArea.Height;
+
+        // TODO: Scroll viewer size should be 6.625 x 10.25
+        var chromeHeight = AppWindow.Size.Height - AppWindow.ClientSize.Height;
+        var chromeWidth = AppWindow.Size.Width - AppWindow.ClientSize.Width;
+
+        var width = (int)((height - chromeHeight) * 6.625 / 10.25) + chromeWidth;
+        var x = (displayArea.WorkArea.Width - width) / 2;
+
+        return new(
+            displayArea.WorkArea.X + x,
+            displayArea.WorkArea.Y,
+            width,
+            height);
     }
 
     public async Task Open(StorageFile storageFile)
     {
-        if (_comicBook is not null)
-            await _comicBook.DisposeAsync();
+        if (ComicBook is not null)
+            await ComicBook.DisposeAsync();
 
         var stream = await storageFile.OpenReadAsync();
 
-        _comicBook = await ComicBookArchive.CreateAsync(stream.AsStream(), storageFile.Path);
+        ComicBook = await ComicBookArchive.CreateAsync(stream.AsStream(), storageFile.Path);
         CurrentPage = 0;
 
         UpdateImageSource();
@@ -60,11 +87,11 @@ public sealed partial class MainWindow : Window
 
     void UpdateImageSource()
     {
-        if (_comicBook is null)
+        if (ComicBook is null)
             return;
 
         var bitmapImage = new BitmapImage();
-        bitmapImage.SetSource(_comicBook.Pages[CurrentPage].Open().AsSeekable().AsRandomAccessStream());
+        bitmapImage.SetSource(ComicBook.Pages[CurrentPage].Open().AsSeekable().AsRandomAccessStream());
         ImageSource = bitmapImage;
         _scrollViewer.ZoomToFactor(_scrollViewer.MinZoomFactor);
         UpdateMinZoomFactor();
@@ -73,7 +100,7 @@ public sealed partial class MainWindow : Window
     // TODO: Arrow left
     private void HandlePrevious(object sender, RoutedEventArgs e)
     {
-        if (_comicBook is null)
+        if (ComicBook is null)
             return;
 
         CurrentPage--;
@@ -87,13 +114,13 @@ public sealed partial class MainWindow : Window
     // TODO: Arrow right
     void HandleNext(object sender, RoutedEventArgs e)
     {
-        if (_comicBook is null)
+        if (ComicBook is null)
             return;
 
         CurrentPage++;
 
-        if (CurrentPage >= _comicBook.Pages.Count)
-            CurrentPage = _comicBook.Pages.Count - 1;
+        if (CurrentPage >= ComicBook.Pages.Count)
+            CurrentPage = ComicBook.Pages.Count - 1;
 
         UpdateImageSource();
     }
@@ -101,6 +128,7 @@ public sealed partial class MainWindow : Window
     void HandleSizeChanged(object sender, SizeChangedEventArgs e)
         => UpdateMinZoomFactor();
 
+    // TODO: Handle images of different sizes
     void UpdateMinZoomFactor()
     {
         if (_image.ActualWidth == 0)

@@ -5,44 +5,59 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:local="using:ComicApp"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d"
-        Title="ComicApp">
+        mc:Ignorable="d">
 
   <Window.SystemBackdrop>
     <MicaBackdrop />
   </Window.SystemBackdrop>
 
-  <!-- TODO: Allow drop -->
   <Grid AllowDrop="True"
         DragOver="HandleDragOver"
         Drop="HandleDrop">
     <Grid.RowDefinitions>
       <RowDefinition Height="Auto" />
       <RowDefinition />
-      <RowDefinition Height="Auto" />
     </Grid.RowDefinitions>
-    <StackPanel HorizontalAlignment="Center">
-      <TextBlock Text="{x:Bind _comicBook.Title}" />
-    </StackPanel>
-    <ScrollViewer Name="_scrollViewer"
-                  Grid.Row="1"
-                  HorizontalScrollBarVisibility="Auto"
-                  MaxZoomFactor="1.0"
-                  SizeChanged="HandleSizeChanged"
-                  ZoomMode="Enabled">
-      <Image Name="_image"
-             HorizontalAlignment="Center"
-             VerticalAlignment="Top"
-             PointerPressed="HandlePointerPressed"
-             PointerWheelChanged="HandlePointerWheelChanged"
-             Source="{x:Bind ImageSource,Mode=OneWay}" />
-    </ScrollViewer>
-    <StackPanel Grid.Row="2"
+
+    <TitleBar Name="_titleBar"
+              Subtitle="{x:Bind ComicBook.Title,Mode=OneWay}"
+              Title="ComicApp" />
+
+    <Grid Grid.Row="1">
+      <ScrollViewer Name="_scrollViewer"
+                    HorizontalScrollBarVisibility="Auto"
+                    MaxZoomFactor="1.0"
+                    SizeChanged="HandleSizeChanged"
+                    ZoomMode="Enabled">
+        <Image Name="_image"
+               HorizontalAlignment="Center"
+               VerticalAlignment="Top"
+               PointerPressed="HandlePointerPressed"
+               PointerWheelChanged="HandlePointerWheelChanged"
+               Source="{x:Bind ImageSource,Mode=OneWay}" />
+      </ScrollViewer>
+
+      <Grid>
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="94" />
+          <ColumnDefinition />
+          <ColumnDefinition Width="94" />
+        </Grid.ColumnDefinitions>
+
+        <Button HorizontalAlignment="Center" Click="HandlePrevious">Previous</Button>
+
+        <TextBlock Grid.Column="1"
+                   HorizontalAlignment="Center"
+                   VerticalAlignment="Bottom">
+          Page: <Run Text="{x:Bind CurrentPage,Mode=OneWay}" /> of <Run Text="{x:Bind ComicBook.Pages.Count,Mode=OneWay}" />
+        </TextBlock>
+
+        <Button Grid.Column="2"
                 HorizontalAlignment="Center"
-                Orientation="Horizontal">
-      <Button Click="HandlePrevious">Previous</Button>
-      <TextBlock>Page: <Run Text="{x:Bind CurrentPage,Mode=OneWay}" /> of <Run Text="{x:Bind _comicBook.Pages.Count,Mode=OneWay}" /></TextBlock>
-      <Button Click="HandleNext">Next</Button>
-    </StackPanel>
+                Click="HandleNext">
+          Next
+        </Button>
+      </Grid>
+    </Grid>
   </Grid>
 </Window>
